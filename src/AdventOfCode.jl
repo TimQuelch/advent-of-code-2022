@@ -5,7 +5,7 @@ using InlineTest
 using DataStructures
 
 # The days which have been solved
-days = []
+days = [1]
 
 # Generate lists of files and modules
 dstrs = map(d -> "d" * lpad(d, 2, '0'), days)
