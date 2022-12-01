@@ -3,14 +3,22 @@ module DAYCODE
 using Chain
 using InlineTest
 
-part1(d) = nothing
-part2(d) = nothing
+function part1(d)
+    nothing
+end
 
-parseinput(io) = mapreduce(vcat, eachline(io)) do l
-    @chain l begin
-        l
+function part2(d)
+    nothing
+end
+
+function parseinput(io)
+    mapreduce(vcat, eachline(io)) do l
+        @chain l begin
+            l
+        end
     end
 end
+
 solve(v) = (part1(v), part2(v))
 solve(io::IO) = solve(parseinput(io))
 
