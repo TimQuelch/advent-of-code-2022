@@ -3,8 +3,14 @@ module d01
 using Chain
 using InlineTest
 
-part1(d) = maximum(map(sum, d))
-part2(d) = sum(sort(map(sum, d))[end-2:end])
+part1(d) = map(sum, d) |> maximum
+
+part2(d) = @chain d begin
+    map(sum, _)
+    sort
+    _[end-2:end]
+    sum
+end
 
 function parseinput(io)
     @chain io begin
