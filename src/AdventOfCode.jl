@@ -1,8 +1,9 @@
 module AdventOfCode
 export solve
 
-using InlineTest
 using DataStructures
+using InlineTest
+using Reexport
 
 # The days which have been solved
 days = [1, 2]
@@ -15,7 +16,7 @@ modules = map(Symbol, dstrs)
 
 # Include all files import modules
 foreach(include, jlfiles)
-foreach(mod -> @eval(using .$mod), modules)
+foreach(mod -> @eval(@reexport using .$mod), modules)
 
 # Make lookup table of data and solve functions
 inputlookup = Dict(days .=> inputfiles)
