@@ -5,6 +5,8 @@ using DataStructures
 using InlineTest
 using Reexport
 
+@reexport using ReTest
+
 # The days which have been solved
 days = [1, 2]
 
