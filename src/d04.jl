@@ -13,7 +13,7 @@ end
 function part2(d)
     return count(d) do r
         a, b = r
-        return a[1] >= b[2] && a[2] <= b[1]
+        return a[1] <= b[2] && a[2] >= b[1]
     end
 end
 
