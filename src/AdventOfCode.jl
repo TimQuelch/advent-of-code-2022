@@ -8,7 +8,7 @@ using Reexport
 @reexport using ReTest
 
 # The days which have been solved
-days = [1, 2, 3, 4, 5, 6, 7]
+days = [1, 2, 3, 4, 5, 6, 7, 8]
 
 # Generate lists of files and modules
 dstrs = map(d -> "d" * lpad(d, 2, '0'), days)
