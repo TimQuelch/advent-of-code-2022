@@ -6,7 +6,8 @@ using InlineTest
 # This isn't super efficient, but as of part 1 it isn't known
 # that the output is a fixed length of 240
 function genx(d)
-    vals = reduce(d; init=[1]) do v, i
+    # use foldl instead of reduce to guarantee init value is used correctly
+    vals = foldl(d; init=[1]) do v, i
         if i[1] == "noop"
             return push!(v, 0)
         else
