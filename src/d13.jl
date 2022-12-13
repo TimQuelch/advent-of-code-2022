@@ -5,24 +5,26 @@ using Chain
 using InlineTest
 
 compare(t::Tuple)::Bool = compare(t[1], t[2])
+
 function compare(l::AbstractVector, r::AbstractVector)::Bool
-    return compareimpl(l, r)
+    return compare_impl(l, r)
 end
-function compareimpl(l::Number, r::Number)
+
+function compare_impl(l::Number, r::Number)
     return l == r ? nothing : l < r
 end
-function compareimpl(l::Number, r::AbstractVector)
-    # @info l, r
-    compareimpl([l], r)
+
+function compare_impl(l::Number, r::AbstractVector)
+    compare_impl([l], r)
 end
-function compareimpl(l::AbstractVector, r::Number)
-    # @info l, r
-    compareimpl(l, [r])
+
+function compare_impl(l::AbstractVector, r::Number)
+    compare_impl(l, [r])
 end
-function compareimpl(l::AbstractVector, r::AbstractVector)
-    # @info l, r
+
+function compare_impl(l::AbstractVector, r::AbstractVector)
     for (ln, rn) in zip(l, r)
-        c = compareimpl(ln, rn)
+        c = compare_impl(ln, rn)
         if !isnothing(c)
             return c
         end
@@ -95,49 +97,36 @@ const teststr = """
     [1,[2,[3,[4,[5,6,0]]]],8,9]
     """
 const testarr = [
-    ([1,1,3,1,1],
-    [1,1,5,1,1])
-
-    ([[1],[2,3,4]],
-    [[1],4]
-)
-    ([9],
-    [[8,7,6]])
-
-    ([[4,4],4,4],
-    [[4,4],4,4,4])
-
-    ([7,7,7,7],
-    [7,7,7]
-)
-    ([],
-    [3])
-
-    ([[[]]],
-    [[]])
-
-    ([1,[2,[3,[4,[5,6,7]]]],8,9],
-    [1,[2,[3,[4,[5,6,0]]]],8,9])
+    ([1, 1, 3, 1, 1], [1, 1, 5, 1, 1]),
+    ([[1], [2, 3, 4]], [[1], 4]),
+    ([9], [[8, 7, 6]]),
+    ([[4, 4], 4, 4], [[4, 4], 4, 4, 4]),
+    ([7, 7, 7, 7], [7, 7, 7]),
+    ([], [3]),
+    ([[[]]], [[]]),
+    ([1, [2, [3, [4, [5, 6, 7]]]], 8, 9], [1, [2, [3, [4, [5, 6, 0]]]], 8, 9]),
 ]
 
-const test2res = [[],
-[[]],
-[[[]]],
-[1,1,3,1,1],
-[1,1,5,1,1],
-[[1],[2,3,4]],
-[1,[2,[3,[4,[5,6,0]]]],8,9],
-[1,[2,[3,[4,[5,6,7]]]],8,9],
-[[1],4],
-[[2]],
-[3],
-[[4,4],4,4],
-[[4,4],4,4,4],
-[[6]],
-[7,7,7],
-[7,7,7,7],
-[[8,7,6]],
-[9],]
+const test2res = [
+    [],
+    [[]],
+    [[[]]],
+    [1, 1, 3, 1, 1],
+    [1, 1, 5, 1, 1],
+    [[1], [2, 3, 4]],
+    [1, [2, [3, [4, [5, 6, 0]]]], 8, 9],
+    [1, [2, [3, [4, [5, 6, 7]]]], 8, 9],
+    [[1], 4],
+    [[2]],
+    [3],
+    [[4, 4], 4, 4],
+    [[4, 4], 4, 4, 4],
+    [[6]],
+    [7, 7, 7],
+    [7, 7, 7, 7],
+    [[8, 7, 6]],
+    [9]
+]
 
 
 @testset "d13" begin
