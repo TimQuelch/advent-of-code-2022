@@ -2,6 +2,13 @@ module d17
 
 using Chain
 using InlineTest
+using StaticArrays
+
+struct State
+    ri::Int
+    ji::Int
+    top::SArray{Tuple{7, 8}, Bool}
+end
 
 const shapes = [
     Bool[1 1 1 1],
@@ -11,13 +18,13 @@ const shapes = [
     Bool[1 1; 1 1]
 ]
 
-function aindices(a, r, c)
+function aindices(r, c)
     x, y = c
     return x:x+size(r, 1)-1, y:y+size(r, 2)-1
 end
 
 function check_collision(a, r, c)
-    xi, yi = aindices(a, r, c)
+    xi, yi = aindices(r, c)
     if !checkbounds(Bool, a, xi, yi)
         return true
     end
@@ -26,30 +33,37 @@ function check_collision(a, r, c)
 end
 
 function sim(d, nrocks)
-    height = 5000               # hopefully this is big enough
+    height = 6000               # This should be big enough...
     a = falses(7, height)
     # @info jet
-    jet = Iterators.Stateful(Iterators.cycle(d))
-    for originalr in Iterators.take(Iterators.cycle(shapes), 2022)
-        r = transpose(originalr)[:, end:-1:1]
-        startheight = findlast(any, eachcol(a))
-        if isnothing(startheight)
-            startheight = 0
-        end
-        c = (3, startheight + 4)
 
-        # @info "start pos" c
+    history = Dict{State, Tuple{Int, Int}}()
 
-        for j in jet
+    t = 0                       # number of rocks dropped
+    ri = 0                      # current index of rock
+    ji = 0                      # current index of jet direction
+    maxy = 0                    # height of the tower
+    maxyi = 0                   # index of top of the tower. Different to height once cycles are added
+    offset_accum = 0            # accumulated offset of index to height
+    while t < nrocks
+        # Increment rock counters
+        t = t + 1
+        ri = mod(ri + 1, 1:length(shapes))
+
+        # Get rock and starting position
+        r = transpose(shapes[ri])[:, end:-1:1]
+        c = (3, maxyi + 4)
+
+        while true
             # Move laterally
             newc = c
-            # @info j
-            if j == '<'
+            ji = mod(ji + 1, 1:length(d)) # Increment jet counter
+            if d[ji] == '<'
                 newc = (newc[1] - 1, newc[2])
-            elseif j == '>'
+            elseif d[ji] == '>'
                 newc = (newc[1] + 1, newc[2])
             else
-                @error "This shouldn't happen" j
+                @error "This shouldn't happen" d[ji]
             end
             if !check_collision(a, r, newc)
                 c = newc
@@ -59,25 +73,56 @@ function sim(d, nrocks)
             newc = (c[1], c[2] - 1)
 
             if check_collision(a, r, newc)
-                xi, yi = aindices(a, r, c)
+                xi, yi = aindices(r, c)
                 aview = view(a, xi, yi)
                 aview .= r .| aview
+
+                # Need to do the extra max here to ensure that if rock falls into a hole the current
+                # highest point is still saved
+                maxyi = max(maximum(yi), maxyi)
+                maxy = maxyi + offset_accum
+
+                # Only start cycle detection after pattern has settled
+                if t > 250
+                    # Store the current state. Indices and top 8 rows
+                    state = State(ri, ji, SArray{Tuple{7, 8}, Bool}(a[:, maxyi-7:maxyi]))
+
+                    if haskey(history, state)
+                        # If we have seen the state before, we "repeat" that cycle until just before the end
+                        ot, oh = history[state]
+                        hdiff = maxy - oh
+                        tdiff = t - ot
+                        if tdiff < nrocks - t
+                            ncycles = div(nrocks - t, tdiff)
+                            t = t + ncycles * tdiff
+                            offset = ncycles * hdiff
+                            maxy += offset
+                            offset_accum += offset
+                            history[state] = (t, maxy)
+                        end
+                    else
+                        # Else we store the state and the current height
+                        history[state] = (t, maxy)
+                    end
+                end
+
                 break
             end
 
+            # Update the array
             c = newc
         end
-        # @info "array" a[:, 1:c[2]+5]
     end
-    return findlast(any, eachcol(a))
+    # history is not actually needed to be returned, but was useful for debugging
+    return maxy, history
 end
 
 function part1(d)
-    sim(d, 2022)
+    sim(d, 2022)[1]
 end
 
 function part2(d)
-    sim(d, 1000000000000)
+    sim(d, 1000000000000)[1]
 end
 
 function parseinput(io)
