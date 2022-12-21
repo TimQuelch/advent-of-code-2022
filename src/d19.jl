@@ -1,6 +1,5 @@
 module d19
 
-using DataStructures: DefaultDictBase
 using Chain
 using InlineTest
 using DataStructures
@@ -15,14 +14,10 @@ end
 
 Base.convert(::Type{StateVec}, x::AbstractArray) = StateVec(x...)
 Base.convert(::Type{StateVec}, x::Tuple) = StateVec(x...)
+# Base.convert(::Type{Tuple}, x::StateVec) = tuple(x...)
+# Base.convert(::Type{Tuple}, x::AbstractArray) = [x...]
 
 Base.show(io::IO, x::StateVec) = print(io, "($(x.ore), $(x.clay), $(x.obsidian), $(x.geode))")
-
-# function Base.:(+)(a::StateVec, b::StateVec)
-#     StateVec(a.ore + b.ore, a.clay + b.clay, a.obsidian + b.obsidian, a.geode + b.geode)
-# end
-# Base.:(-)(a::StateVec) = StateVec(-a.ore, -a.clay, -a.obsidian, -a.geode)
-# Base.:(-)(a::StateVec, b::StateVec) = a + (-b)
 
 function Base.:(==)(a::StateVec, b::StateVec)
     f = (:ore, :clay, :obsidian, :geode)
@@ -94,6 +89,8 @@ function sim(blueprint::Blueprint, time)
             Iterators.filter(cp -> best_possible(cp[1], cp[2], t) >= best_current, _)
             Iterators.filter(cp -> best[trunc_state(cp...)] <= current_value(cp..., t), _)
             unique(cp -> trunc_state(cp...), _)
+            sort!(_, by=cp -> cp[1] .+ 2 .* cp[2], lt=(a, b) -> reverse(a) < reverse(b), rev=true)
+            Iterators.take(_, 3000)
             collect
         end
 
@@ -103,8 +100,8 @@ function sim(blueprint::Blueprint, time)
 
     for t in time-1:-1:0
         oldlength = length(queue)
-        @time queue, best = prune_queue(queue, t)
-        @info "Time $(time - t)" length(queue) oldlength (oldlength - length(queue)) best
+        queue, best = prune_queue(queue, t)
+        # @info "Time $(time - t)" length(queue) oldlength (oldlength - length(queue)) best
         next_queue = Vector{Tuple{StateVec, StateVec}}()
 
         while !isempty(queue)
@@ -123,7 +120,7 @@ function sim(blueprint::Blueprint, time)
         queue = next_queue
     end
 
-    @show res = maximum(cp -> cp[1].geode, queue)
+    res = maximum(cp -> cp[1].geode, queue)
     return res
 end
 
